@@ -123,6 +123,22 @@ body.modo-obs #aviso-obs{display:block}
 .popup-obs p{font-size:12px;color:var(--ink-dim);white-space:pre-wrap;max-width:230px}
 
 /* Planificador de viaje */
+.viaje-caja{background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius);padding:12px;margin-bottom:12px}
+.campo-auto{position:relative}
+.campo-auto input{width:100%;font:inherit;font-size:13.5px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px 11px}
+.campo-auto input::placeholder{color:var(--ink-dim)}
+.campo-auto input:focus-visible{outline:2px solid var(--acento);outline-offset:-1px}
+.sugerencias{position:absolute;top:calc(100% + 3px);left:0;right:0;background:var(--panel);border:1px solid var(--line);border-radius:8px;z-index:60;max-height:200px;overflow-y:auto;box-shadow:0 8px 22px rgba(0,0,0,.5);display:none}
+.sugerencias.visible{display:block}
+.sugerencias button{display:block;width:100%;text-align:left;font:inherit;font-size:12px;color:var(--ink);background:none;border:none;border-bottom:1px solid var(--line);padding:8px 10px;cursor:pointer;line-height:1.35}
+.sugerencias button:last-child{border-bottom:none}
+.sugerencias button:hover{background:var(--panel3)}
+.btn-gps{width:100%;margin-top:7px;font-size:12.5px;font-weight:700;padding:9px 10px;display:flex;align-items:center;justify-content:center;gap:6px}
+.link-mapa{font:inherit;font-size:11.5px;background:none;border:none;color:var(--ink-dim);text-decoration:underline;cursor:pointer;padding:4px 0 0;display:block}
+.link-mapa:hover,.link-mapa.activo{color:var(--acento)}
+.btn-cta{width:100%;font:inherit;font-size:14.5px;font-weight:800;background:var(--acento);color:var(--acento-ink);border:none;border-radius:9px;padding:13px 12px;cursor:pointer;margin-top:4px}
+.btn-cta:hover{filter:brightness(1.08)}
+.btn-cta:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .viaje-campo{margin-bottom:10px}
 .viaje-campo label{display:block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-dim);margin-bottom:4px}
 .viaje-fila{display:flex;gap:5px}
@@ -136,14 +152,23 @@ body.modo-obs #aviso-obs{display:block}
 .res-viaje .res-cab h3{font-size:12.5px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .res-viaje .res-datos{font-family:var(--mono);font-size:10.5px;color:var(--ink-dim);line-height:1.7}
 .res-viaje .btn{margin-top:7px;font-size:10.5px;padding:3px 8px}
+.res-viaje.grande{padding:12px;cursor:pointer}
+.res-viaje.grande:hover{border-color:var(--ink-dim)}
+.res-viaje.grande.activa{border-color:var(--acento);box-shadow:0 0 0 1px var(--acento)}
+.res-viaje.grande .res-cab h3{white-space:normal;line-height:1.25}
+.chip-grande{font-size:19px;padding:6px 12px;border-radius:8px}
+.res-sub{font-size:10.5px;font-weight:500;color:var(--ink-dim);display:block;margin-top:2px}
+.pasos{list-style:none;margin:10px 0 0;display:flex;flex-direction:column;gap:6px}
+.pasos li{font-size:12.5px;line-height:1.45;display:flex;gap:7px}
+.pasos .paso-ico{flex-shrink:0}
+.paso-alerta{font-size:11.5px;color:#ffcf6b;margin-top:7px;line-height:1.4}
+.res-viaje.grande .btn{margin-top:10px;font-size:11.5px;padding:6px 10px;width:100%}
 .res-orden{background:var(--panel3);color:var(--ink);font-weight:800;font-size:10.5px;min-width:19px;height:19px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .nota-metodo{font-size:10.5px;color:var(--ink-dim);line-height:1.55;margin:10px 2px 0}
 #aviso-tiles{position:absolute;top:12px;right:12px;z-index:1100;background:var(--panel);border:1px solid var(--rojo);color:var(--ink);font-size:11.5px;padding:9px 12px;border-radius:9px;max-width:290px;line-height:1.5;display:none;box-shadow:0 6px 18px rgba(0,0,0,.45)}
 #aviso-tiles.visible{display:block}
 .marca-punto{font-weight:800;font-family:var(--sans);font-size:11px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);color:#fff}
 
-/* Toggle sidebar mobile */
-#btn-sidebar{display:none;position:absolute;top:12px;left:12px;z-index:1300}
 
 /* Tooltip de línea */
 .leaflet-tooltip.tt-linea{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;font-family:var(--sans);font-size:11.5px;font-weight:600;box-shadow:0 3px 10px rgba(0,0,0,.4)}
@@ -152,9 +177,11 @@ body.modo-obs #aviso-obs{display:block}
 .leaflet-control-attribution{font-size:9px !important;background:rgba(255,255,255,.75) !important}
 
 @media (max-width:780px){
-  #sidebar{position:absolute;inset:0 auto 0 0;transform:translateX(-100%);transition:transform .2s;width:300px;min-width:300px;box-shadow:6px 0 24px rgba(0,0,0,.5)}
-  body.sidebar-abierto #sidebar{transform:translateX(0)}
-  #btn-sidebar{display:block}
+  /* Panel arriba (abierto siempre) y mapa abajo: sin botón ☰ */
+  #app{flex-direction:column}
+  #sidebar{width:100%;min-width:0;height:54vh;border-right:none;border-bottom:2px solid var(--line)}
+  #mapa-cont{flex:1;min-height:0}
+  #contenido{padding-bottom:24px}
   #panel-comp{left:12px;right:12px;max-width:none;min-width:0}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none !important}}
@@ -174,8 +201,8 @@ body.modo-obs #aviso-obs{display:block}
       <input type="file" id="input-importar" accept="application/json" hidden>
     </div>
     <nav id="tabs" aria-label="Secciones">
-      <button id="tab-lineas" class="activo">Líneas</button>
-      <button id="tab-viaje">¿Qué tomo?</button>
+      <button id="tab-viaje" class="activo">¿Qué tomo?</button>
+      <button id="tab-lineas">Líneas</button>
       <button id="tab-obs">Obs. <span id="obs-contador"></span></button>
     </nav>
     <div id="buscador"><input id="filtro" type="search" placeholder="Filtrar líneas o variantes…" aria-label="Filtrar"></div>
@@ -183,7 +210,6 @@ body.modo-obs #aviso-obs{display:block}
   </aside>
 
   <main id="mapa-cont">
-    <button class="btn" id="btn-sidebar" aria-label="Abrir panel">☰ Panel</button>
     <div id="mapa" role="application" aria-label="Mapa de recorridos"></div>
     <div id="aviso-obs">Hacé clic en el mapa donde va la observación · Esc para cancelar</div>
     <div id="aviso-tiles"><strong>No cargó el fondo de calles.</strong><br>Verificá tu conexión a internet. Los recorridos igual se ven.</div>
@@ -334,9 +360,15 @@ function boundsDe(ids){
 }
 mapa.fitBounds(boundsDe(Object.keys(todasVariantes)) || L.latLngBounds([[-34.7,-58.7],[-34.5,-58.4]]), {padding:[30,30]});
 
+/* Sesgo geográfico para el buscador de direcciones: prioriza resultados cerca de los recorridos */
+const _boundsRecorridos = boundsDe(Object.keys(todasVariantes));
+const SESGO_VISTA = _boundsRecorridos
+  ? '&viewbox='+[_boundsRecorridos.getWest(),_boundsRecorridos.getNorth(),_boundsRecorridos.getEast(),_boundsRecorridos.getSouth()].map(x=>x.toFixed(4)).join(',')+'&bounded=0'
+  : '';
+
 /* ============ SIDEBAR: LÍNEAS ============ */
 const cont = document.getElementById('contenido');
-let pestania = 'lineas';
+let pestania = 'viaje';
 const capasAbiertas = new Set([0]);
 
 function abrirCapa(ci){ capasAbiertas.add(ci); if (pestania!=='lineas') cambiarTab('lineas'); else render(); }
@@ -591,12 +623,61 @@ function ponerPunto(rol, lat, lng, etiqueta){
   marcasViaje[rol] = m;
   if (pestania==='viaje') render();
 }
+const NOMINATIM = 'https://nominatim.openstreetmap.org/search?format=json&countrycodes=ar&accept-language=es';
+function etiquetaCorta(displayName){ return displayName.split(',').slice(0,3).join(',').trim(); }
 async function geocodificar(q){
-  const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ar&accept-language=es&q='+encodeURIComponent(q));
+  const r = await fetch(NOMINATIM+SESGO_VISTA+'&limit=1&q='+encodeURIComponent(q));
   if (!r.ok) throw new Error('El buscador de direcciones no respondió (¿hay internet?)');
   const j = await r.json();
   if (!j.length) throw new Error('No se encontró esa dirección. Probá con "calle altura, localidad".');
-  return { lat:+j[0].lat, lng:+j[0].lon, etiqueta:j[0].display_name.split(',').slice(0,3).join(',').trim() };
+  return { lat:+j[0].lat, lng:+j[0].lon, etiqueta:etiquetaCorta(j[0].display_name) };
+}
+
+/* Autocompletado de direcciones mientras se escribe */
+const autoTimers = { origen:null, destino:null };
+const autoSeq = { origen:0, destino:0 };
+async function traerSugerencias(q, contSug, rol){
+  const seq = ++autoSeq[rol];
+  try{
+    const r = await fetch(NOMINATIM+SESGO_VISTA+'&limit=5&q='+encodeURIComponent(q));
+    if (!r.ok) return;
+    const j = await r.json();
+    if (seq !== autoSeq[rol]) return; // llegó una respuesta vieja: la descartamos
+    contSug.innerHTML = '';
+    if (!j.length){ contSug.classList.remove('visible'); return; }
+    j.forEach(s=>{
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = s.display_name.split(',').slice(0,4).join(',');
+      b.addEventListener('mousedown', e=>e.preventDefault()); // evita que el blur cierre la lista antes del click
+      b.addEventListener('click', ()=>{
+        const etiqueta = etiquetaCorta(s.display_name);
+        if (rol==='origen') viaje.textoO = etiqueta; else viaje.textoD = etiqueta;
+        ponerPunto(rol, +s.lat, +s.lon, etiqueta);
+        mapa.setView([+s.lat, +s.lon], 15);
+      });
+      contSug.appendChild(b);
+    });
+    contSug.classList.add('visible');
+  }catch(e){ /* sin internet: queda "Marcar en el mapa" */ }
+}
+function armarAutocompletado(input, contSug, rol){
+  input.addEventListener('input', ()=>{
+    if (rol==='origen') viaje.textoO = input.value; else viaje.textoD = input.value;
+    clearTimeout(autoTimers[rol]);
+    const q = input.value.trim();
+    if (q.length < 3){ contSug.classList.remove('visible'); contSug.innerHTML=''; return; }
+    autoTimers[rol] = setTimeout(()=>traerSugerencias(q, contSug, rol), 350);
+  });
+  input.addEventListener('keydown', e=>{
+    if (e.key === 'Enter'){
+      e.preventDefault();
+      const primera = contSug.querySelector('button');
+      if (primera) primera.click(); else buscarDireccion(rol);
+    }
+    if (e.key === 'Escape'){ contSug.classList.remove('visible'); }
+  });
+  input.addEventListener('blur', ()=>setTimeout(()=>contSug.classList.remove('visible'), 180));
 }
 async function buscarDireccion(rol){
   const texto = (rol==='origen' ? viaje.textoO : viaje.textoD).trim();
@@ -703,79 +784,84 @@ function limpiarViaje(){
   ['origen','destino'].forEach(r=>{ if (marcasViaje[r]){ mapa.removeLayer(marcasViaje[r]); marcasViaje[r]=null; } });
   redibujarTodo(); render();
 }
+function cuadrasTxt(km){
+  const m = Math.round(km*1000);
+  if (m < 60) return 'menos de una cuadra ('+m+' m)';
+  const c = Math.round(m/100);
+  return '~'+c+' '+(c===1?'cuadra':'cuadras')+' ('+m+' m)';
+}
 function renderViaje(){
   cont.innerHTML='';
   const d=document.createElement('div');
   d.innerHTML = `
-    <div class="viaje-campo">
-      <label for="vo">Origen</label>
-      <div class="viaje-fila">
-        <input id="vo" placeholder="Dirección (ej: Ituzaingó 340, San Isidro)" value="${esc(viaje.textoO)}">
-        <button class="btn" id="vo-buscar">Buscar</button>
+    <div class="viaje-caja">
+      <div class="viaje-campo">
+        <label for="vo">¿Desde dónde salís?</label>
+        <div class="campo-auto">
+          <input id="vo" placeholder="Escribí una dirección (ej: Ituzaingó 340, San Isidro)" autocomplete="off" value="${esc(viaje.textoO)}">
+          <div class="sugerencias" id="vo-sug"></div>
+        </div>
+        <button class="btn btn-gps" id="vo-gps">📍 Usar mi ubicación</button>
+        <button class="link-mapa ${modoPick==='origen'?'activo':''}" id="vo-pick">${modoPick==='origen'?'Tocá el mapa para marcar el origen (Esc cancela)':'o marcá el origen en el mapa'}</button>
+        ${viaje.origen?`<div class="viaje-punto-ok">✓ ${esc(viaje.origen.etiqueta)}</div>`:''}
+        ${viaje.errorO?`<div class="viaje-error">${esc(viaje.errorO)}</div>`:''}
       </div>
-      <div class="viaje-fila" style="margin-top:5px">
-        <button class="btn" id="vo-gps">Mi ubicación</button>
-        <button class="btn ${modoPick==='origen'?'activo':''}" id="vo-pick">Marcar en el mapa</button>
+      <div class="viaje-campo">
+        <label for="vd">¿A dónde vas?</label>
+        <div class="campo-auto">
+          <input id="vd" placeholder="Escribí la dirección de destino" autocomplete="off" value="${esc(viaje.textoD)}">
+          <div class="sugerencias" id="vd-sug"></div>
+        </div>
+        <button class="link-mapa ${modoPick==='destino'?'activo':''}" id="vd-pick">${modoPick==='destino'?'Tocá el mapa para marcar el destino (Esc cancela)':'o marcá el destino en el mapa'}</button>
+        ${viaje.destino?`<div class="viaje-punto-ok">✓ ${esc(viaje.destino.etiqueta)}</div>`:''}
+        ${viaje.errorD?`<div class="viaje-error">${esc(viaje.errorD)}</div>`:''}
       </div>
-      ${viaje.origen?`<div class="viaje-punto-ok">✓ ${esc(viaje.origen.etiqueta)}</div>`:''}
-      ${viaje.errorO?`<div class="viaje-error">${esc(viaje.errorO)}</div>`:''}
-    </div>
-    <div class="viaje-campo">
-      <label for="vd">Destino</label>
-      <div class="viaje-fila">
-        <input id="vd" placeholder="Dirección de destino" value="${esc(viaje.textoD)}">
-        <button class="btn" id="vd-buscar">Buscar</button>
-      </div>
-      <div class="viaje-fila" style="margin-top:5px">
-        <button class="btn ${modoPick==='destino'?'activo':''}" id="vd-pick">Marcar en el mapa</button>
-      </div>
-      ${viaje.destino?`<div class="viaje-punto-ok">✓ ${esc(viaje.destino.etiqueta)}</div>`:''}
-      ${viaje.errorD?`<div class="viaje-error">${esc(viaje.errorD)}</div>`:''}
-    </div>
-    <div class="viaje-campo">
-      <label for="v-radio">Caminata máxima hasta el recorrido</label>
-      <div class="viaje-fila">
-        <select id="v-radio" class="btn" style="flex:1;text-align:left">
-          ${[400,600,800,1200,1600].map(r=>`<option value="${r}" ${viaje.radio===r?'selected':''}>${r} m</option>`).join('')}
+      <div class="viaje-campo">
+        <label for="v-radio">Caminata máxima hasta el recorrido</label>
+        <select id="v-radio" class="btn" style="width:100%;text-align:left">
+          ${[400,600,800,1200,1600].map(r=>`<option value="${r}" ${viaje.radio===r?'selected':''}>${r} m (~${Math.round(r/100)} cuadras)</option>`).join('')}
         </select>
       </div>
-    </div>
-    <div class="viaje-fila">
-      <button class="btn activo" id="v-calcular" style="flex:1">${viaje.buscando?'Buscando…':'Buscar colectivo'}</button>
-      <button class="btn" id="v-limpiar">Limpiar</button>
+      <button class="btn-cta" id="v-calcular">${viaje.buscando?'Buscando…':'🚌 Buscar mi colectivo'}</button>
+      ${(viaje.origen||viaje.destino||viaje.resultados)?'<button class="btn" id="v-limpiar" style="width:100%;margin-top:7px">Limpiar todo</button>':''}
     </div>
     ${viaje.error?`<div class="viaje-error">${esc(viaje.error)}</div>`:''}
     <div id="v-resultados" style="margin-top:12px"></div>
-    <p class="nota-metodo">Estimación geométrica sobre los trazados embebidos: no considera paradas reales, sentido de circulación, frecuencias ni combinaciones. La búsqueda de direcciones usa Nominatim (OpenStreetMap) y necesita internet; "Marcar en el mapa" funciona sin conexión.</p>`;
+    <p class="nota-metodo">Estimación geométrica sobre los trazados embebidos: no considera paradas reales, sentido de circulación, frecuencias ni combinaciones. Las sugerencias de direcciones usan Nominatim (OpenStreetMap) y necesitan internet; "marcá en el mapa" funciona sin conexión.</p>`;
   cont.appendChild(d);
 
   const vo=d.querySelector('#vo'), vd=d.querySelector('#vd');
-  vo.addEventListener('input', ()=>viaje.textoO=vo.value);
-  vd.addEventListener('input', ()=>viaje.textoD=vd.value);
-  vo.addEventListener('keydown', e=>{ if(e.key==='Enter') buscarDireccion('origen'); });
-  vd.addEventListener('keydown', e=>{ if(e.key==='Enter') buscarDireccion('destino'); });
-  d.querySelector('#vo-buscar').addEventListener('click', ()=>buscarDireccion('origen'));
-  d.querySelector('#vd-buscar').addEventListener('click', ()=>buscarDireccion('destino'));
+  armarAutocompletado(vo, d.querySelector('#vo-sug'), 'origen');
+  armarAutocompletado(vd, d.querySelector('#vd-sug'), 'destino');
   d.querySelector('#vo-gps').addEventListener('click', usarGPS);
   d.querySelector('#vo-pick').addEventListener('click', ()=>activarPick('origen'));
   d.querySelector('#vd-pick').addEventListener('click', ()=>activarPick('destino'));
   d.querySelector('#v-radio').addEventListener('change', e=>{ viaje.radio=+e.target.value; });
   d.querySelector('#v-calcular').addEventListener('click', calcularViaje);
-  d.querySelector('#v-limpiar').addEventListener('click', limpiarViaje);
+  const btnLimpiar = d.querySelector('#v-limpiar');
+  if (btnLimpiar) btnLimpiar.addEventListener('click', limpiarViaje);
 
   if (viaje.resultados && viaje.resultados.length){
     const rc = d.querySelector('#v-resultados');
     viaje.resultados.forEach((c,idx)=>{
       const v=c.v, capa=capas[v.capa];
+      const activa = sugerencia && sugerencia.variantId===v.id;
       const el=document.createElement('div');
-      el.className='res-viaje';
+      el.className='res-viaje grande'+(activa?' activa':'');
       el.innerHTML = `
-        <div class="res-cab"><span class="res-orden">${idx+1}</span>
-          ${capa.chip?`<span class="chip-linea" style="background:${capa.chipColor}">${capa.chip}</span>`:''}
-          <h3 title="${esc(capa.nombre)}">${esc(nombreDe(v))}</h3></div>
-        <div class="res-datos">Caminás ${Math.round(c.wO*1000)} m hasta el recorrido<br>Viajás ≈ ${c.aBordo.toFixed(1)} km a bordo<br>Bajás y caminás ${Math.round(c.wD*1000)} m hasta el destino${c.orden?'':'<br>⚠ Según el dibujo de la traza iría a contramano: verificá el sentido real'}</div>
-        <button class="btn ${sugerencia&&sugerencia.variantId===v.id?'activo':''}">Ver en el mapa</button>`;
-      el.querySelector('button').addEventListener('click', ()=>verSugerencia(idx));
+        <div class="res-cab">
+          <span class="res-orden">${idx+1}</span>
+          ${capa.chip?`<span class="chip-linea chip-grande" style="background:${capa.chipColor}">${esc(capa.chip)}</span>`:''}
+          <h3>${esc(nombreDe(v))}<span class="res-sub">${esc(capa.nombre)}</span></h3>
+        </div>
+        <ol class="pasos">
+          <li><span class="paso-ico">🚶</span><span>Caminá ${cuadrasTxt(c.wO)} hasta el recorrido</span></li>
+          <li><span class="paso-ico">🚌</span><span>Tomá ${capa.chip?`el <strong>${esc(capa.chip)}</strong>`:'el colectivo'} y viajá ≈ ${c.aBordo.toFixed(1)} km a bordo</span></li>
+          <li><span class="paso-ico">🚶</span><span>Bajá y caminá ${cuadrasTxt(c.wD)} hasta tu destino</span></li>
+        </ol>
+        ${c.orden?'':'<div class="paso-alerta">⚠ Según el dibujo de la traza iría a contramano: verificá el sentido real.</div>'}
+        <button class="btn ${activa?'activo':''}">${activa?'✓ Viéndolo en el mapa':'Ver en el mapa'}</button>`;
+      el.addEventListener('click', ()=>verSugerencia(idx));
       rc.appendChild(el);
     });
   }
@@ -823,14 +909,12 @@ document.getElementById('tab-lineas').addEventListener('click', ()=>cambiarTab('
 document.getElementById('tab-viaje').addEventListener('click', ()=>cambiarTab('viaje'));
 document.getElementById('tab-obs').addEventListener('click', ()=>cambiarTab('obs'));
 document.getElementById('filtro').addEventListener('input', render);
-document.getElementById('btn-sidebar').addEventListener('click', ()=>document.body.classList.toggle('sidebar-abierto'));
-document.getElementById('mapa').addEventListener('click', ()=>document.body.classList.remove('sidebar-abierto'));
 
 /* ============ INICIO ============ */
 document.getElementById('descripcion-fuente').textContent = FUENTE.descripcion;
 redibujarTodo();
 refrescarObs();
-render();
+cambiarTab('viaje');
 </script>
 </body>
 </html>
