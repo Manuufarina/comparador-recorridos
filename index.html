@@ -145,7 +145,8 @@ body.modo-obs #aviso-obs{display:block}
 .viaje-fila input{flex:1;min-width:0;font:inherit;font-size:12.5px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:7px 9px}
 .viaje-fila input:focus-visible{outline:2px solid var(--acento);outline-offset:-1px}
 .viaje-fila select{font:inherit;font-size:12px}
-.viaje-punto-ok{font-size:11px;color:var(--ok);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.viaje-punto-ok{font-size:11px;color:var(--ok);margin-top:4px;line-height:1.4}
+.pista-pin{color:var(--ink-dim);font-size:10.5px}
 .viaje-error{font-size:11.5px;color:var(--rojo);margin-top:8px;line-height:1.4}
 .res-viaje{background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius);padding:9px 10px;margin-bottom:8px}
 .res-viaje .res-cab{display:flex;align-items:center;gap:7px;margin-bottom:5px}
@@ -365,6 +366,7 @@ const _boundsRecorridos = boundsDe(Object.keys(todasVariantes));
 const SESGO_VISTA = _boundsRecorridos
   ? '&viewbox='+[_boundsRecorridos.getWest(),_boundsRecorridos.getNorth(),_boundsRecorridos.getEast(),_boundsRecorridos.getSouth()].map(x=>x.toFixed(4)).join(',')+'&bounded=0'
   : '';
+const CENTRO_ZONA = _boundsRecorridos ? [_boundsRecorridos.getCenter().lat, _boundsRecorridos.getCenter().lng] : null;
 
 /* ============ SIDEBAR: LÍNEAS ============ */
 const cont = document.getElementById('contenido');
@@ -624,13 +626,50 @@ function ponerPunto(rol, lat, lng, etiqueta){
   if (pestania==='viaje') render();
 }
 const NOMINATIM = 'https://nominatim.openstreetmap.org/search?format=json&countrycodes=ar&accept-language=es';
+const GEOREF = 'https://apis.datos.gob.ar/georef/api/direcciones';
 function etiquetaCorta(displayName){ return displayName.split(',').slice(0,3).join(',').trim(); }
+function tituloCalle(s){ return s.toLowerCase().replace(/(^|[\s.])\S/g, c=>c.toUpperCase()); }
+
+/* Georef (datos.gob.ar): interpola la altura sobre cartografía oficial del INDEC.
+   Para "calle altura" es más exacto que OSM, donde suele faltar el número de puerta. */
+async function sugerirGeoref(q){
+  const coma = q.indexOf(',');
+  const dir = (coma>=0 ? q.slice(0,coma) : q).trim();
+  const zona = coma>=0 ? q.slice(coma+1).trim() : '';
+  if (!/\d/.test(dir)) return []; // sin altura no hay nada que interpolar
+  const pedir = async filtro => {
+    const r = await fetch(GEOREF+'?max=10&direccion='+encodeURIComponent(dir)+filtro);
+    if (!r.ok) return [];
+    return ((await r.json()).direcciones||[]).filter(d=>d.ubicacion && d.ubicacion.lat!=null);
+  };
+  let dirs = zona ? await pedir('&departamento='+encodeURIComponent(zona)) : [];
+  if (!dirs.length) dirs = await pedir('&provincia=buenos%20aires');
+  if (CENTRO_ZONA) dirs.sort((a,b)=>
+    haversine([a.ubicacion.lat,a.ubicacion.lon],CENTRO_ZONA) - haversine([b.ubicacion.lat,b.ubicacion.lon],CENTRO_ZONA));
+  return dirs.slice(0,4).map(d=>{
+    const partes = d.nomenclatura.split(',');
+    return { lat:+d.ubicacion.lat, lng:+d.ubicacion.lon, etiqueta: tituloCalle(partes[0]) + (partes[1]?','+partes[1]:'') };
+  });
+}
+async function sugerirNominatim(q, limite){
+  const r = await fetch(NOMINATIM+SESGO_VISTA+'&limit='+limite+'&q='+encodeURIComponent(q));
+  if (!r.ok) return [];
+  return (await r.json()).map(s=>({ lat:+s.lat, lng:+s.lon, etiqueta: etiquetaCorta(s.display_name) }));
+}
+const normalizar = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
+function combinarSugerencias(geo, osm){
+  // Georef primero (altura exacta); de OSM se descartan duplicados de la misma dirección
+  const extra = osm.filter(o => !geo.some(g =>
+    normalizar(g.etiqueta.split(',')[0]) === normalizar(o.etiqueta.split(',')[0]) ||
+    haversine([g.lat,g.lng],[o.lat,o.lng]) < 0.25));
+  return geo.concat(extra).slice(0,6);
+}
 async function geocodificar(q){
-  const r = await fetch(NOMINATIM+SESGO_VISTA+'&limit=1&q='+encodeURIComponent(q));
-  if (!r.ok) throw new Error('El buscador de direcciones no respondió (¿hay internet?)');
-  const j = await r.json();
-  if (!j.length) throw new Error('No se encontró esa dirección. Probá con "calle altura, localidad".');
-  return { lat:+j[0].lat, lng:+j[0].lon, etiqueta:etiquetaCorta(j[0].display_name) };
+  const [geo, osm] = await Promise.all([sugerirGeoref(q).catch(()=>[]), sugerirNominatim(q,1).catch(()=>null)]);
+  if (geo.length) return geo[0];
+  if (osm === null) throw new Error('El buscador de direcciones no respondió (¿hay internet?)');
+  if (!osm.length) throw new Error('No se encontró esa dirección. Probá con "calle altura, localidad".');
+  return osm[0];
 }
 
 /* Autocompletado de direcciones mientras se escribe */
@@ -639,22 +678,20 @@ const autoSeq = { origen:0, destino:0 };
 async function traerSugerencias(q, contSug, rol){
   const seq = ++autoSeq[rol];
   try{
-    const r = await fetch(NOMINATIM+SESGO_VISTA+'&limit=5&q='+encodeURIComponent(q));
-    if (!r.ok) return;
-    const j = await r.json();
+    const [geo, osm] = await Promise.all([sugerirGeoref(q).catch(()=>[]), sugerirNominatim(q,5).catch(()=>[])]);
     if (seq !== autoSeq[rol]) return; // llegó una respuesta vieja: la descartamos
+    const items = combinarSugerencias(geo, osm);
     contSug.innerHTML = '';
-    if (!j.length){ contSug.classList.remove('visible'); return; }
-    j.forEach(s=>{
+    if (!items.length){ contSug.classList.remove('visible'); return; }
+    items.forEach(s=>{
       const b = document.createElement('button');
       b.type = 'button';
-      b.textContent = s.display_name.split(',').slice(0,4).join(',');
+      b.textContent = s.etiqueta;
       b.addEventListener('mousedown', e=>e.preventDefault()); // evita que el blur cierre la lista antes del click
       b.addEventListener('click', ()=>{
-        const etiqueta = etiquetaCorta(s.display_name);
-        if (rol==='origen') viaje.textoO = etiqueta; else viaje.textoD = etiqueta;
-        ponerPunto(rol, +s.lat, +s.lon, etiqueta);
-        mapa.setView([+s.lat, +s.lon], 15);
+        if (rol==='origen') viaje.textoO = s.etiqueta; else viaje.textoD = s.etiqueta;
+        ponerPunto(rol, s.lat, s.lng, s.etiqueta);
+        mapa.setView([s.lat, s.lng], 16);
       });
       contSug.appendChild(b);
     });
@@ -803,7 +840,7 @@ function renderViaje(){
         </div>
         <button class="btn btn-gps" id="vo-gps">📍 Usar mi ubicación</button>
         <button class="link-mapa ${modoPick==='origen'?'activo':''}" id="vo-pick">${modoPick==='origen'?'Tocá el mapa para marcar el origen (Esc cancela)':'o marcá el origen en el mapa'}</button>
-        ${viaje.origen?`<div class="viaje-punto-ok">✓ ${esc(viaje.origen.etiqueta)}</div>`:''}
+        ${viaje.origen?`<div class="viaje-punto-ok">✓ ${esc(viaje.origen.etiqueta)} <span class="pista-pin">· si quedó corrido, arrastrá el pin O en el mapa</span></div>`:''}
         ${viaje.errorO?`<div class="viaje-error">${esc(viaje.errorO)}</div>`:''}
       </div>
       <div class="viaje-campo">
@@ -813,7 +850,7 @@ function renderViaje(){
           <div class="sugerencias" id="vd-sug"></div>
         </div>
         <button class="link-mapa ${modoPick==='destino'?'activo':''}" id="vd-pick">${modoPick==='destino'?'Tocá el mapa para marcar el destino (Esc cancela)':'o marcá el destino en el mapa'}</button>
-        ${viaje.destino?`<div class="viaje-punto-ok">✓ ${esc(viaje.destino.etiqueta)}</div>`:''}
+        ${viaje.destino?`<div class="viaje-punto-ok">✓ ${esc(viaje.destino.etiqueta)} <span class="pista-pin">· si quedó corrido, arrastrá el pin D en el mapa</span></div>`:''}
         ${viaje.errorD?`<div class="viaje-error">${esc(viaje.errorD)}</div>`:''}
       </div>
       <div class="viaje-campo">
@@ -827,7 +864,7 @@ function renderViaje(){
     </div>
     ${viaje.error?`<div class="viaje-error">${esc(viaje.error)}</div>`:''}
     <div id="v-resultados" style="margin-top:12px"></div>
-    <p class="nota-metodo">Estimación geométrica sobre los trazados embebidos: no considera paradas reales, sentido de circulación, frecuencias ni combinaciones. Las sugerencias de direcciones usan Nominatim (OpenStreetMap) y necesitan internet; "marcá en el mapa" funciona sin conexión.</p>`;
+    <p class="nota-metodo">Estimación geométrica sobre los trazados embebidos: no considera paradas reales, sentido de circulación, frecuencias ni combinaciones. Las direcciones con altura se ubican con la API Georef oficial (datos.gob.ar) y se complementan con Nominatim (OpenStreetMap); ambas necesitan internet. "Marcá en el mapa" funciona sin conexión.</p>`;
   cont.appendChild(d);
 
   const vo=d.querySelector('#vo'), vd=d.querySelector('#vd');
