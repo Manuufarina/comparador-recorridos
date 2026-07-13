@@ -1,0 +1,5 @@
+{
+  "name": "comparador-recorridos",
+  "private": true,
+  "scripts": { "build": "node build.js" }
+}
